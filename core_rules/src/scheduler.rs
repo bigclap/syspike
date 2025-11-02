@@ -2,6 +2,7 @@
 
 use core_graph::{Network, StepObserver};
 use tracing::{info, instrument};
+use candle_core::Tensor;
 
 use crate::diffusion::DiffusionLoop;
 
@@ -48,7 +49,7 @@ impl ReasoningScheduler {
     pub fn run_case(
         &self,
         network: &mut Network,
-        embedding: &[f32],
+        embedding: &Tensor,
         diffusion: &mut DiffusionLoop,
         mut observer: Option<&mut dyn StepObserver>,
     ) -> SchedulerOutcome {
@@ -86,6 +87,7 @@ impl ReasoningScheduler {
 mod tests {
     use super::*;
     use core_graph::{ConnectionParams, NodeParams, StepObserver, assembly::GraphBuilder};
+    use candle_core::Device;
 
     struct CountingObserver {
         invocations: usize,
@@ -127,7 +129,7 @@ mod tests {
         });
         let scheduler = ReasoningScheduler::new(SchedulerConfig { settle_steps: 2 });
 
-        let embedding = vec![1.0];
+        let embedding = Tensor::from_vec(vec![1.0f32], (1,), &Device::Cpu).unwrap();
         let mut observer = CountingObserver::new();
         let outcome = scheduler.run_case(
             &mut network,

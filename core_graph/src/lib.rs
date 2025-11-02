@@ -12,6 +12,7 @@ pub use profiling::{NetworkProfiler, ProfileSummary, ProfilerConfig, StepObserve
 
 use std::collections::HashMap;
 
+use candle_core::Tensor;
 use self::pools::{InhibitoryPoolRuntime, RegionalDetectorRuntime};
 use serde::{Deserialize, Serialize};
 
@@ -439,7 +440,8 @@ impl Network {
     }
 
     /// Writes an embedding into the configured input interface.
-    pub fn inject_embedding(&mut self, embedding: &[f32]) {
+    pub fn inject_embedding(&mut self, embedding: &Tensor) {
+        let embedding: Vec<f32> = embedding.to_vec1().unwrap();
         for (node_id, value) in self.input_nodes.iter().zip(embedding.iter().copied()) {
             if let Some(node) = self.nodes.get_mut(*node_id) {
                 node.accum_exc += value;

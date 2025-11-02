@@ -1,9 +1,9 @@
 [package]
-name = "datasets"
+name = "model_image_dec"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+candle-core = { git = "https://github.com/huggingface/candle.git" }
 thiserror = "1.0"
-image = "0.25.1"
 model_image_enc = { path = "../model_image_enc" }

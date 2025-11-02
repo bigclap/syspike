@@ -1,12 +1,14 @@
 [package]
 name = "core_rules"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 
 [dependencies]
 core_graph = { path = "../core_graph" }
-retriever = { path = "../retriever" }
+serde = { version = "1.0", features = ["derive"] }
 tracing = "0.1"
+candle-core = { git = "https://github.com/huggingface/candle.git" }
+retriever = { path = "../retriever" }
 
 [dev-dependencies]
-approx = { workspace = true }
+rstest = "0.21.0"

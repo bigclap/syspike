@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, bail};
 use serde::Deserialize;
@@ -20,6 +20,12 @@ pub struct TrainSettings {
     /// Offline trainer hyper-parameters.
     #[serde(default)]
     pub trainer: OfflineTrainerConfig,
+}
+
+impl AsMut<TrainSettings> for TrainSettings {
+    fn as_mut(&mut self) -> &mut TrainSettings {
+        self
+    }
 }
 
 impl TrainSettings {
@@ -63,6 +69,12 @@ pub struct EvalSettings {
     pub trainer: OfflineTrainerConfig,
 }
 
+impl AsMut<EvalSettings> for EvalSettings {
+    fn as_mut(&mut self) -> &mut EvalSettings {
+        self
+    }
+}
+
 impl EvalSettings {
     fn default_checkpoint() -> PathBuf {
         PathBuf::from("checkpoints/offline.ckpt")
@@ -94,7 +106,7 @@ impl Default for EvalSettings {
 pub struct InferSettings {
     /// XOR inputs evaluated during inference.
     #[serde(default = "InferSettings::default_inputs")]
-    pub inputs: Vec<String>,
+    pub inputs: Vec<PathBuf>,
     /// Optional checkpoint hint surfaced to the user.
     #[serde(default)]
     pub checkpoint: Option<PathBuf>,
@@ -103,14 +115,15 @@ pub struct InferSettings {
     pub profile_output: Option<PathBuf>,
 }
 
+impl AsMut<InferSettings> for InferSettings {
+    fn as_mut(&mut self) -> &mut InferSettings {
+        self
+    }
+}
+
 impl InferSettings {
-    fn default_inputs() -> Vec<String> {
-        vec![
-            "0 0".to_string(),
-            "0 1".to_string(),
-            "1 0".to_string(),
-            "1 1".to_string(),
-        ]
+    fn default_inputs() -> Vec<PathBuf> {
+        Vec::new()
     }
 
     fn default_profile_output() -> Option<PathBuf> {
@@ -133,14 +146,20 @@ impl Default for InferSettings {
 pub struct ProfileSettings {
     /// XOR inputs executed while collecting the CPU profile.
     #[serde(default = "ProfileSettings::default_inputs")]
-    pub inputs: Vec<String>,
+    pub inputs: Vec<PathBuf>,
     /// Target location for the generated flamegraph.
     #[serde(default = "ProfileSettings::default_output")]
     pub profile_output: PathBuf,
 }
 
+impl AsMut<ProfileSettings> for ProfileSettings {
+    fn as_mut(&mut self) -> &mut ProfileSettings {
+        self
+    }
+}
+
 impl ProfileSettings {
-    fn default_inputs() -> Vec<String> {
+    fn default_inputs() -> Vec<PathBuf> {
         InferSettings::default_inputs()
     }
 
@@ -161,7 +180,7 @@ impl Default for ProfileSettings {
 /// Loads TOML settings for the requested command, falling back to defaults when missing.
 pub fn load_settings<T>(command: &str, explicit: Option<PathBuf>) -> Result<T>
 where
-    T: DeserializeOwned + Default,
+    T: DeserializeOwned + Default + AsMut<T> + 'static,
 {
     let (candidate, explicit_provided) = match explicit {
         Some(path) => (path, true),
@@ -175,12 +194,17 @@ where
                 candidate.display()
             )
         })?;
-        let parsed = toml::from_str(&raw).with_context(|| {
+        let mut parsed: T = toml::from_str(&raw).with_context(|| {
             format!(
                 "failed to parse TOML configuration for `{command}` at {}",
                 candidate.display()
             )
         })?;
+
+        if let Some(base_path) = candidate.parent() {
+            resolve_paths(parsed.as_mut(), base_path);
+        }
+
         Ok(parsed)
     } else if explicit_provided {
         bail!(
@@ -189,6 +213,42 @@ where
         );
     } else {
         Ok(T::default())
+    }
+}
+
+fn resolve_paths<T>(settings: &mut T, base_path: &Path)
+where
+    T: AsMut<T> + 'static,
+{
+    // This is a bit of a hack, but it's the easiest way to resolve paths
+    // without having to write a custom deserializer for each settings struct.
+    if let Some(settings) = (settings as &mut dyn std::any::Any).downcast_mut::<TrainSettings>() {
+        if let Some(path) = &mut settings.dataset {
+            if path.is_relative() {
+                *path = base_path.join(&path);
+            }
+        }
+    }
+    if let Some(settings) = (settings as &mut dyn std::any::Any).downcast_mut::<EvalSettings>() {
+        if let Some(path) = &mut settings.dataset {
+            if path.is_relative() {
+                *path = base_path.join(&path);
+            }
+        }
+    }
+    if let Some(settings) = (settings as &mut dyn std::any::Any).downcast_mut::<InferSettings>() {
+        for path in &mut settings.inputs {
+            if path.is_relative() {
+                *path = base_path.join(&path);
+            }
+        }
+    }
+    if let Some(settings) = (settings as &mut dyn std::any::Any).downcast_mut::<ProfileSettings>() {
+        for path in &mut settings.inputs {
+            if path.is_relative() {
+                *path = base_path.join(&path);
+            }
+        }
     }
 }
 
@@ -216,7 +276,7 @@ mod tests {
         let path = file.into_temp_path();
         std::fs::write(
             &path,
-            r#"inputs = ["1 0"]
+            r#"inputs = ["test.png"]
 checkpoint = "ckpts/demo.ckpt"
 profile_output = "profiles/demo.svg"
 "#,
@@ -225,7 +285,7 @@ profile_output = "profiles/demo.svg"
 
         let settings: InferSettings =
             load_settings("infer", Some(path.to_path_buf())).expect("parsed settings");
-        assert_eq!(settings.inputs, vec!["1 0".to_string()]);
+        assert_eq!(settings.inputs, vec![path.parent().unwrap().join("test.png")]);
         assert_eq!(settings.checkpoint, Some(PathBuf::from("ckpts/demo.ckpt")));
         assert_eq!(
             settings.profile_output,
