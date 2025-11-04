@@ -1,13 +1,19 @@
 [package]
 name = "evalbench"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 
 [dependencies]
 core_graph = { path = "../core_graph" }
-model_enc = { path = "../model_enc" }
-model_dec = { path = "../model_dec" }
+model_image_enc = { path = "../model_image_enc" }
+model_image_dec = { path = "../model_image_dec" }
+candle-core = { git = "https://github.com/huggingface/candle.git" }
+anyhow = "1.0"
+core_rules = { path = "../core_rules" }
+image = "0.25.1"
+
 
 [dev-dependencies]
-rstest = { workspace = true }
-core_rules = { path = "../core_rules" }
+rstest = "0.21.0"
+tempfile = "3.10"
+datasets = { path = "../datasets" }

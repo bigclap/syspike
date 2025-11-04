@@ -1,6 +1,4 @@
-//! Evaluation benches and canned demos for the SysPike workspace.
+//! Synthetic evaluation suites for the reasoning pipeline.
 
+pub mod autoencoder;
 pub mod synthetic;
-pub mod xor;
-
-pub use xor::build_xor_network;

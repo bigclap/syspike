@@ -9,7 +9,7 @@ members = [
     "trainer",
     "datasets",
     "evalbench",
-    "cli",
+    "cli", "model_image_enc", "model_image_dec",
 ]
 
 [workspace.dependencies]

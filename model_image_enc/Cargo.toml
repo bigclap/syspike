@@ -1,0 +1,9 @@
+[package]
+name = "model_image_enc"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+candle-core = { git = "https://github.com/huggingface/candle.git" }
+thiserror = "1.0"
+bytemuck = { version = "1.15.0", features = ["derive"] }

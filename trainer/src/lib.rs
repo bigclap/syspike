@@ -1,46 +1,22 @@
 //! Training pipeline scaffolding placeholder.
 
 pub mod config;
-pub mod dataset;
 pub mod metrics;
 pub mod offline;
 pub mod online;
 pub mod optimizer;
+pub mod image_autoencoder;
 
 pub use config::OfflineTrainerConfig;
-pub use dataset::{DecoderSample, MmapDataset};
 pub use metrics::{distinct_n, median_cosine_similarity};
 pub use offline::{OfflineDecoderTrainer, ValidationRecord, ValidationReport};
 pub use online::{OnlinePlasticity, OnlinePlasticityConfig, PlasticityStepOutcome, TraceLogEntry};
 pub use optimizer::AdamWSchedule;
+pub use image_autoencoder::ImageAutoencoderTrainer;
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Write;
-
-    fn write_sample(file: &mut tempfile::NamedTempFile, context: &str, target_tokens: &[&str]) {
-        let record = serde_json::json!({
-            "context": context,
-            "target_tokens": target_tokens,
-            "target_embedding": [1.0, 0.0],
-            "retrieval_candidates": [[1.0, 0.0], [0.0, 1.0]]
-        });
-        writeln!(file, "{}", record).unwrap();
-    }
-
-    #[test]
-    fn mmap_dataset_reads_json_records() {
-        let mut file = tempfile::NamedTempFile::new().unwrap();
-        write_sample(&mut file, "prompt", &["hello", "world"]);
-        write_sample(&mut file, "query", &["foo"]);
-
-        let dataset = MmapDataset::open(file.path()).unwrap();
-        let samples: Vec<_> = dataset.iter().collect::<Result<_, _>>().unwrap();
-        assert_eq!(samples.len(), 2);
-        assert_eq!(samples[0].context, "prompt");
-        assert_eq!(samples[1].target_tokens, vec!["foo".to_string()]);
-    }
 
     #[test]
     fn adamw_schedule_warmup_and_cosine() {

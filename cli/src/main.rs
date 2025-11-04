@@ -59,6 +59,7 @@ enum Command {
 
 fn run() -> Result<()> {
     let cli = Cli::parse();
+    let _profiler_guard = telemetry::init_telemetry();
     match cli.command {
         Command::Train { config } => run_train(config),
         Command::Eval { config } => run_eval(config),
