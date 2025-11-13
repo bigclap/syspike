@@ -26,8 +26,8 @@ fn ann_search_returns_ranked_matches() {
     let mut retriever = Retriever::new(base_config()).expect("valid config");
     retriever
         .ingest([
-            record(1, [1.0, 0.0]),
-            record(2, [0.0, 1.0]),
+            record(1, [1.0, 0.1]),
+            record(2, [0.1, 1.0]),
             record(3, [0.7, 0.7]),
         ])
         .expect("ingest succeeds");

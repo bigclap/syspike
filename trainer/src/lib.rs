@@ -5,14 +5,13 @@ pub mod metrics;
 pub mod offline;
 pub mod online;
 pub mod optimizer;
-pub mod image_autoencoder;
+pub mod mnist_autoencoder;
 
 pub use config::OfflineTrainerConfig;
 pub use metrics::{distinct_n, median_cosine_similarity};
 pub use offline::{OfflineDecoderTrainer, ValidationRecord, ValidationReport};
 pub use online::{OnlinePlasticity, OnlinePlasticityConfig, PlasticityStepOutcome, TraceLogEntry};
 pub use optimizer::AdamWSchedule;
-pub use image_autoencoder::ImageAutoencoderTrainer;
 
 #[cfg(test)]
 mod tests {

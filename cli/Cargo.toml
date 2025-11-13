@@ -17,7 +17,9 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
 datasets = { path = "../datasets" }
 candle-core = { git = "https://github.com/huggingface/candle.git" }
+candle-nn = { git = "https://github.com/huggingface/candle.git" }
 image = "0.25.1"
+once_cell = "1.19.0"
 
 
 [dev-dependencies]

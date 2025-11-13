@@ -8,6 +8,7 @@ core_graph = { path = "../core_graph" }
 model_image_enc = { path = "../model_image_enc" }
 model_image_dec = { path = "../model_image_dec" }
 candle-core = { git = "https://github.com/huggingface/candle.git" }
+candle-nn = { git = "https://github.com/huggingface/candle.git" }
 anyhow = "1.0"
 core_rules = { path = "../core_rules" }
 image = "0.25.1"
