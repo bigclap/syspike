@@ -7,3 +7,5 @@ edition = "2021"
 thiserror = "1.0"
 image = "0.25.1"
 model_image_enc = { path = "../model_image_enc" }
+candle-datasets = { git = "https://github.com/huggingface/candle.git" }
+candle-core = { git = "https://github.com/huggingface/candle.git" }

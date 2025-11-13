@@ -33,13 +33,13 @@ pub fn run_eval(_config_path: Option<PathBuf>) -> Result<()> {
 }
 
 pub fn run_infer(config_path: Option<PathBuf>) -> Result<()> {
-    let settings = crate::config::load_settings::<InferSettings>("infer", config_path)?;
+    let _settings = crate::config::load_settings::<InferSettings>("infer", config_path)?;
     let device = Device::Cpu;
     let dataset = datasets::load_mnist()?;
     let image = &dataset.images[0];
 
-    let mut vb = candle_nn::VarBuilder::zeros(candle_core::DType::F32, &device);
-    let autoencoder = Autoencoder::new(&mut vb, device)?;
+    let mut autoencoder = Autoencoder::new(device.clone())?;
+    autoencoder.load("autoencoder.safetensors", &device)?;
 
     let encoded = autoencoder.encoder.encode(image)?;
     let decoded = autoencoder.decoder.decode(&encoded)?;

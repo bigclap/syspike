@@ -1,10 +1,13 @@
-use std::{fs::File, path::Path};
+use std::{fs::File, path::Path, sync::Mutex};
 
+use once_cell::sync::Lazy;
 use pprof::{ProfilerGuard, ProfilerGuardBuilder};
 use tracing_subscriber::{EnvFilter, fmt, prelude::*};
 
+pub static PROFILER: Lazy<Mutex<Option<ProfilerGuard<'static>>>> = Lazy::new(Default::default);
+
 /// Initialise tracing output and start a CPU profiler.
-pub fn init_telemetry() -> Option<ProfilerGuard<'static>> {
+pub fn init_telemetry() {
     let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
     let fmt_layer = fmt::layer().with_target(false);
     tracing_subscriber::registry()
@@ -12,11 +15,12 @@ pub fn init_telemetry() -> Option<ProfilerGuard<'static>> {
         .with(fmt_layer)
         .init();
 
-    ProfilerGuardBuilder::default()
+    let guard = ProfilerGuardBuilder::default()
         .frequency(1000)
         .blocklist(&["libc", "libpthread", "libgcc", "libm"])
         .build()
-        .ok()
+        .ok();
+    *PROFILER.lock().unwrap() = guard;
 }
 
 /// Persist the collected CPU profile if profiling was active.
